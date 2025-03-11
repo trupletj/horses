@@ -1,0 +1,19 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Horse {
+  id           String   @id @default(cuid())
+  name         String
+  breed        String
+  color        String
+  age          Int
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
