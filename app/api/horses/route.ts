@@ -4,6 +4,7 @@ import { z } from "zod";
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid'; // npm install uuid @types/uuid
+import { getServerSession } from "next-auth/next";
 
 // Simple schema for validation
 const horseSchema = z.object({
@@ -24,6 +25,16 @@ const horseSchema = z.object({
 
 export async function POST(request: Request) {
     try {
+        // Get the current user session
+        const session = await getServerSession();
+
+        if (!session?.user) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         // Handle multipart form data
         const formData = await request.formData();
 
@@ -76,12 +87,13 @@ export async function POST(request: Request) {
             }
         }
 
-        // Create horse in database
+        // Create horse in database with user association
         const horse = await db.horse.create({
             data: {
                 ...validatedData,
                 share: validatedData.share ? validatedData.share : undefined,
-                imageUrl: imageUrl
+                imageUrl: imageUrl,
+                userId: session.user.id, // Associate with the current user
             },
         });
 

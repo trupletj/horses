@@ -6,18 +6,32 @@ import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
+import { FcGoogle } from "react-icons/fc"
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     })
+    const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         // Login logic will be added later
         router.push('/home')
+    }
+
+    const handleGoogleSignIn = async () => {
+        setIsLoading(true)
+        try {
+            await signIn("google", { callbackUrl: "/dashboard" })
+        } catch (error) {
+            console.error("Google sign in error:", error)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -37,6 +51,30 @@ export default function LoginPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="mb-6">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full flex items-center justify-center gap-2"
+                            onClick={handleGoogleSignIn}
+                            disabled={isLoading}
+                        >
+                            <FcGoogle className="h-5 w-5" />
+                            Google-ээр нэвтрэх
+                        </Button>
+                    </div>
+
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-300" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-white text-gray-500">
+                                Эсвэл и-мэйлээр нэвтрэх
+                            </span>
+                        </div>
+                    </div>
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
