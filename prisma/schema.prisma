@@ -28,6 +28,7 @@ model Horse {
   description  String? // тайлбар
   share        Float? // Boolean биш Float төрөл ашиглах
   brand        String? // им тамга
+  imageUrl     String? // Зургийн URL
   registeredAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
   Owner        Owner?   @relation(fields: [ownerId], references: [id])

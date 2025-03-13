@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { registerHorse } from '@/app/actions/horse'
+import Image from 'next/image'
 
 export default function HorseForm() {
     const router = useRouter()
@@ -25,24 +25,61 @@ export default function HorseForm() {
         brand: ''
     })
     const [error, setError] = useState('')
+    const [selectedImage, setSelectedImage] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
+            setSelectedImage(file)
+
+            // Create preview URL
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                if (e.target?.result) {
+                    setImagePreview(e.target.result as string)
+                }
+            }
+            reader.readAsDataURL(file)
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
 
         try {
-            const result = await registerHorse(formData)
+            // Create FormData to handle file upload
+            const formDataWithImage = new FormData()
 
-            if (!result.success) {
-                setError(result.error || 'Failed to create horse')
-                return
+            // Add all form fields
+            Object.entries(formData).forEach(([key, value]) => {
+                formDataWithImage.append(key, String(value))
+            })
+
+            // Add image if selected
+            if (selectedImage) {
+                formDataWithImage.append('image', selectedImage)
+            }
+
+            // Submit the form with image
+            const response = await fetch('/api/horses', {
+                method: 'POST',
+                body: formDataWithImage,
+                // Don't set Content-Type header when using FormData
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to create horse')
             }
 
             router.push('/horses')
             router.refresh()
         } catch (error) {
             console.error('Error:', error)
-            setError('An unexpected error occurred')
+            setError(error instanceof Error ? error.message : 'An unexpected error occurred')
         }
     }
 
@@ -54,6 +91,44 @@ export default function HorseForm() {
                 </div>
             )}
 
+            {/* Image upload section */}
+            <div className="mb-6">
+                <label className="block mb-2 font-medium">Морины зураг</label>
+                <div className="flex flex-col items-center">
+                    {imagePreview ? (
+                        <div className="relative w-full h-64 mb-4">
+                            <Image
+                                src={imagePreview}
+                                alt="Preview"
+                                fill
+                                className="object-contain rounded-lg"
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-full h-64 bg-gray-100 flex items-center justify-center rounded-lg mb-4">
+                            <p className="text-gray-500">Зураг сонгоогүй байна</p>
+                        </div>
+                    )}
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        ref={fileInputRef}
+                        className="hidden"
+                    />
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        Зураг сонгох
+                    </Button>
+                </div>
+            </div>
+
+            {/* Existing form fields */}
             <div>
                 <label htmlFor="name" className="block mb-2 font-medium">Морины нэр</label>
                 <Input

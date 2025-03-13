@@ -2,6 +2,7 @@ import { getHorse } from '@/app/actions/horse'
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import Image from 'next/image'
 
 export default async function HorsePage({ params }: { params: { id: string } }) {
     const resolvedParams = await params;
@@ -41,6 +42,19 @@ export default async function HorsePage({ params }: { params: { id: string } }) 
                     <Link href="/horses">Буцах</Link>
                 </Button>
             </div>
+
+            {horse.imageUrl && (
+                <div className="mb-6">
+                    <div className="relative w-full h-64 md:h-96">
+                        <Image
+                            src={horse.imageUrl}
+                            alt={horse.name}
+                            fill
+                            className="object-contain rounded-lg"
+                        />
+                    </div>
+                </div>
+            )}
 
             <Card>
                 <CardHeader>
