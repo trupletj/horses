@@ -1,4 +1,9 @@
-// prisma/schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,9 +16,30 @@ datasource db {
 model Horse {
   id           String   @id @default(cuid())
   name         String
-  breed        String
-  color        String
-  age          Int
+  color        String? // зүс
+  number       String? // дугаар
+  location     String?
+  ageCategory  String? // насны ангилал
+  age          Int? // нас
+  status       String? // төлөв
+  province     String? // аймаг
+  district     String? // сум
+  chipNumber   String? // чипний дугаар
+  description  String? // тайлбар
+  share        Float? // Boolean биш Float төрөл ашиглах
+  brand        String? // им тамга
   registeredAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  Owner        Owner?   @relation(fields: [ownerId], references: [id])
+  ownerId      String?
+}
+
+model Owner {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  address   String?
+  horses    Horse[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
