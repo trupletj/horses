@@ -77,7 +77,7 @@ export default function ProfilePage() {
 
     if (status === 'unauthenticated') {
         return <div className="text-center p-8">
-            <p>Та нэвтрээгүй байна. <a href="/login" className="text-blue-600">Нэвтрэх</a></p>
+            <p>Та нэвтрээгүй байна. <a href="/auth/login" className="text-blue-600">Нэвтрэх</a></p>
         </div>
     }
 

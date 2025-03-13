@@ -19,7 +19,7 @@ export async function requireAuth() {
     const user = await getCurrentUser()
 
     if (!user) {
-        redirect("/login")
+        redirect("/auth/login")
     }
 
     return user
@@ -29,7 +29,7 @@ export async function requireAdmin() {
     const user = await getCurrentUser()
 
     if (!user) {
-        redirect("/login")
+        redirect("/auth/login")
     }
 
     if (user.role !== "admin") {

@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname
 
     // Define public paths that don't require authentication
-    const publicPaths = ['/', '/login', '/register']
+    const publicPaths = ['/', '/auth/login', '/auth/register']
     const isPublicPath = publicPaths.includes(path)
 
     // Get the session token
@@ -21,7 +21,7 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL('/login', req.url))
     }
 
-    if (token && (path === '/login' || path === '/register')) {
+    if (token && (path === '/auth/login' || path === '/auth/register')) {
         // Redirect to dashboard if already logged in and trying to access login/register
         return NextResponse.redirect(new URL('/dashboard', req.url))
     }

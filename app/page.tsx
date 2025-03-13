@@ -34,12 +34,12 @@ export default function Home() {
           {/* Auth Buttons */}
           <div className="space-x-4">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/login">
+              <Link href="/auth/login">
                 Нэвтрэх
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-              <Link href="/register-user">
+              <Link href="/auth/register">
                 Бүртгүүлэх
               </Link>
             </Button>
