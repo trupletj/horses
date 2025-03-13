@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 
 export default async function HorsePage({ params }: { params: { id: string } }) {
-    const { horse, error } = await getHorse(params.id)
+    const resolvedParams = await params;
+    const { horse, error } = await getHorse(resolvedParams.id)
 
     if (error) {
         return (

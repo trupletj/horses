@@ -83,3 +83,20 @@ export async function getHorse(id: string) {
         return { error: "Мэдээлэл авахад алдаа гарлаа" };
     }
 }
+
+export async function getRecentHorses(limit = 3) {
+    try {
+        const horses = await db.horse.findMany({
+            take: limit,
+            orderBy: { registeredAt: 'desc' },
+            include: {
+                Owner: true
+            }
+        });
+
+        return { horses };
+    } catch (error) {
+        console.error("Error getting recent horses:", error);
+        return { error: "Сүүлийн бүртгэлүүдийг ачаалахад алдаа гарлаа" };
+    }
+}

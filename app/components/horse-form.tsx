@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { registerHorse } from '@/app/actions/horse'
 
 export default function HorseForm() {
     const router = useRouter()
@@ -23,31 +24,36 @@ export default function HorseForm() {
         share: 0,
         brand: ''
     })
+    const [error, setError] = useState('')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        const form = new FormData()
-
-        // Add all required fields
-        Object.entries(formData).forEach(([key, value]) => {
-            form.append(key, value.toString())
-        })
+        setError('')
 
         try {
-            const response = await fetch('/api/horses', {
-                method: 'POST',
-                body: form
-            })
-            if (!response.ok) throw new Error('Failed to create horse')
+            const result = await registerHorse(formData)
+
+            if (!result.success) {
+                setError(result.error || 'Failed to create horse')
+                return
+            }
+
             router.push('/horses')
+            router.refresh()
         } catch (error) {
             console.error('Error:', error)
-            // Handle error (e.g., show error message)
+            setError('An unexpected error occurred')
         }
     }
 
     return (
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {error}
+                </div>
+            )}
+
             <div>
                 <label htmlFor="name" className="block mb-2 font-medium">Морины нэр</label>
                 <Input

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from "next/link"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
@@ -15,7 +15,64 @@ import {
     Info,
 } from "lucide-react"
 
+// Define types for your data
+type DashboardStats = {
+    horsesCount: number;
+    ownersCount: number;
+    regionsCount: number;
+    breedsCount: number;
+}
+
+type RecentHorse = {
+    id: string;
+    name: string;
+    location: string;
+    registeredDate: string;
+}
+
 export default function DashboardPage() {
+    // State with proper types
+    const [stats, setStats] = useState<DashboardStats>({
+        horsesCount: 0,
+        ownersCount: 0,
+        regionsCount: 0,
+        breedsCount: 8 // Default value
+    });
+
+    const [recentHorses, setRecentHorses] = useState<RecentHorse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch stats when component mounts
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                // Fetch dashboard stats
+                const statsResponse = await fetch('/api/stats');
+                if (statsResponse.ok) {
+                    const statsData = await statsResponse.json();
+                    setStats(statsData);
+                } else {
+                    console.error("Failed to fetch stats:", await statsResponse.text());
+                }
+
+                // Fetch recent horses
+                const horsesResponse = await fetch('/api/horses/recent');
+                if (horsesResponse.ok) {
+                    const horsesData = await horsesResponse.json();
+                    setRecentHorses(horsesData);
+                } else {
+                    console.error("Failed to fetch horses:", await horsesResponse.text());
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             {/* Header with search */}
@@ -45,7 +102,7 @@ export default function DashboardPage() {
                         <CircleDot className="h-8 w-8 text-blue-500" />
                         <div className="ml-4">
                             <p className="text-sm text-gray-500">Нийт морьд</p>
-                            <h3 className="text-2xl font-bold">156</h3>
+                            <h3 className="text-2xl font-bold">{stats.horsesCount}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -54,7 +111,7 @@ export default function DashboardPage() {
                         <CircleUser className="h-8 w-8 text-green-500" />
                         <div className="ml-4">
                             <p className="text-sm text-gray-500">Эзэмшигчид</p>
-                            <h3 className="text-2xl font-bold">48</h3>
+                            <h3 className="text-2xl font-bold">{stats.ownersCount}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -63,7 +120,7 @@ export default function DashboardPage() {
                         <Map className="h-8 w-8 text-purple-500" />
                         <div className="ml-4">
                             <p className="text-sm text-gray-500">Бүс нутаг</p>
-                            <h3 className="text-2xl font-bold">12</h3>
+                            <h3 className="text-2xl font-bold">{stats.regionsCount}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -72,7 +129,7 @@ export default function DashboardPage() {
                         <Tag className="h-8 w-8 text-orange-500" />
                         <div className="ml-4">
                             <p className="text-sm text-gray-500">Үүлдэр, омог</p>
-                            <h3 className="text-2xl font-bold">8</h3>
+                            <h3 className="text-2xl font-bold">{stats.breedsCount}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -92,25 +149,33 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100">
-                                    <div className="flex items-center">
-                                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                                            <CircleDot className="h-6 w-6 text-blue-600" />
+                            {isLoading ? (
+                                <p>Loading...</p>
+                            ) : recentHorses.length > 0 ? (
+                                recentHorses.map((horse) => (
+                                    <div key={horse.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100">
+                                        <div className="flex items-center">
+                                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                                <CircleDot className="h-6 w-6 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium">{horse.name}</p>
+                                                <p className="text-sm text-gray-500">{horse.location}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium">Хүрэн морь</p>
-                                            <p className="text-sm text-gray-500">Төв аймаг, Батсүмбэр сум</p>
+                                        <div className="text-right">
+                                            <p className="text-sm text-gray-500">{horse.registeredDate}</p>
+                                            <Button variant="ghost" size="sm" asChild>
+                                                <Link href={`/horses/${horse.id}`}>
+                                                    Дэлгэрэнгүй
+                                                </Link>
+                                            </Button>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-500">2024.02.2{i}</p>
-                                        <Button variant="ghost" size="sm">
-                                            Дэлгэрэнгүй
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                <p>No recent horses found</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
