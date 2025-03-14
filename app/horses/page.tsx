@@ -1,108 +1,91 @@
 // app/horses/page.tsx
-import Link from 'next/link'
-import { getHorses } from '@/app/actions/horse'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+import { Metadata } from "next"
+import Link from "next/link"
+import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Plus } from "lucide-react"
+
+export const metadata: Metadata = {
+    title: "Морьдын жагсаалт",
+    description: "Бүртгэлтэй бүх морьдын жагсаалт",
+}
 
 export default async function HorsesPage() {
-    const { horses, error } = await getHorses()
+    const horses = await db.horse.findMany({
+        orderBy: {
+            updatedAt: "desc",
+        },
+        include: {
+            user: true,
+            Owner: true,
+        },
+    })
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <Card className="p-6">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Бүртгэлтэй морьд</h1>
-                        <p className="mt-2 text-gray-600">Нийт: {horses?.length || 0} морь</p>
-                    </div>
-                    <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                        <Link href="/register">
-                            Шинэ морь бүртгэх
+        <div className="container mx-auto py-10">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold">Морьдын жагсаалт</h1>
+                <Button asChild>
+                    <Link href="/horses/register">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Морь бүртгэх
+                    </Link>
+                </Button>
+            </div>
+
+            {horses.length === 0 ? (
+                <div className="text-center py-12">
+                    <p className="text-gray-500 mb-4">Одоогоор бүртгэлтэй морь байхгүй байна</p>
+                    <Button asChild>
+                        <Link href="/horses/register">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Морь бүртгэх
                         </Link>
                     </Button>
                 </div>
-
-                {error ? (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        {error}
-                    </div>
-                ) : horses && horses.length > 0 ? (
-                    <div className="overflow-hidden rounded-lg border border-gray-200">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50">
-                                    <TableHead className="py-4 font-semibold text-gray-900">Нэр</TableHead>
-                                    <TableHead className="font-semibold text-gray-900">Зүс</TableHead>
-                                    <TableHead className="font-semibold text-gray-900">Дугаар</TableHead>
-                                    <TableHead className="font-semibold text-gray-900">Нас</TableHead>
-                                    <TableHead className="font-semibold text-gray-900">Байршил</TableHead>
-                                    <TableHead className="font-semibold text-gray-900 text-right">Үйлдэл</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {horses.map((horse) => (
-                                    <TableRow
-                                        key={horse.id}
-                                        className="hover:bg-gray-50 transition-colors"
-                                    >
-                                        <TableCell className="font-medium">{horse.name}</TableCell>
-                                        <TableCell>{horse.color}</TableCell>
-                                        <TableCell>{horse.number}</TableCell>
-                                        <TableCell>{horse.age} нас</TableCell>
-                                        <TableCell>{horse.location}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button
-                                                asChild
-                                                variant="outline"
-                                                size="sm"
-                                                className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-600"
-                                            >
-                                                <Link href={`/horses/${horse.id}`}>
-                                                    Дэлгэрэнгүй
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                ) : (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                        <svg
-                            className="mx-auto h-12 w-12 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            aria-hidden="true"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                            />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">Одоогоор бүртгэлтэй морь байхгүй байна</h3>
-                        <p className="mt-1 text-sm text-gray-500">Шинэ морь бүртгэж эхлэх үү?</p>
-                        <div className="mt-6">
-                            <Button asChild>
-                                <Link href="/register">
-                                    Анхны морио бүртгэх
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
-                )}
-            </Card>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {horses.map((horse) => (
+                        <Link key={horse.id} href={`/horses/${horse.id}`}>
+                            <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
+                                <div className="aspect-video relative">
+                                    {horse.imageUrl ? (
+                                        <img
+                                            src={horse.imageUrl}
+                                            alt={horse.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                            <p className="text-gray-400">Зураггүй</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <CardContent className="pt-4">
+                                    <h2 className="text-xl font-bold mb-2">{horse.name}</h2>
+                                    <p className="text-gray-500">
+                                        {horse.age && horse.gender
+                                            ? `${horse.age} настай ${horse.gender}`
+                                            : "Мэдээлэл байхгүй"}
+                                    </p>
+                                    {horse.status && (
+                                        <p className="text-sm mt-1">
+                                            Төлөв: <span className="font-medium">{horse.status}</span>
+                                        </p>
+                                    )}
+                                </CardContent>
+                                <CardFooter className="border-t pt-4">
+                                    <div className="flex justify-between w-full text-sm text-gray-500">
+                                        <span>{horse.province || "Тодорхойгүй"}</span>
+                                        <span>{new Date(horse.updatedAt).toLocaleDateString()}</span>
+                                    </div>
+                                </CardFooter>
+                            </Card>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }

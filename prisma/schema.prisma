@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,15 +13,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -48,8 +41,8 @@ model User {
   image         String?
   role          String    @default("user")
   accounts      Account[]
-  sessions      Session[]
   horses        Horse[]
+  sessions      Session[]
 }
 
 model VerificationToken {
@@ -61,27 +54,35 @@ model VerificationToken {
 }
 
 model Horse {
-  id           String   @id @default(cuid())
-  name         String
-  color        String? // зүс
-  number       String? // дугаар
-  location     String?
-  ageCategory  String? // насны ангилал
-  age          Int? // нас
-  status       String? // төлөв
-  province     String? // аймаг
-  district     String? // сум
-  chipNumber   String? // чипний дугаар
-  description  String? // тайлбар
-  share        Float? // хувь
-  brand        String? // им тамга
-  imageUrl     String? // Зургийн URL
-  registeredAt DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id])
-  Owner        Owner?   @relation(fields: [ownerId], references: [id])
-  ownerId      String?
+  id              String   @id @default(cuid())
+  name            String
+  chipId          String?
+  description     String?
+  number          String?
+  origin          String?
+  percentage      String?
+  ancestry        String?
+  brand           String?
+  age             String?
+  gender          String?
+  status          String?
+  province        String?
+  district        String?
+  originalOwner   String?
+  currentOwner    String?
+  acquisitionYear String?
+  listedYear      String?
+  imageUrl        String?
+  share           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  registeredAt    DateTime @default(now())
+  userId          String?
+  ownerId         String?
+  Owner           Owner?   @relation(fields: [ownerId], references: [id])
+  user            User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Owner {
@@ -89,7 +90,7 @@ model Owner {
   name      String
   phone     String?
   address   String?
-  horses    Horse[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  horses    Horse[]
 }

@@ -1,271 +1,465 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Image from 'next/image'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { toast } from 'sonner'
+import { Loader2, Upload } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+// Horse type definition
+type HorseFormData = {
+    name: string
+    chipId: string
+    description: string
+    number: string
+    origin: string
+    percentage: string
+    ancestry: string
+    brand: string
+    age: string
+    gender: string
+    status: string
+    province: string
+    district: string
+    originalOwner: string
+    currentOwner: string
+    acquisitionYear: string
+    listedYear: string
+    image: File | null
+}
 
 export default function HorseForm() {
+    const { data: session } = useSession()
     const router = useRouter()
-    const [formData, setFormData] = useState({
-        name: '',
-        color: '',
-        number: '',
-        location: '',
-        ageCategory: '',
-        age: 0,
-        status: '',
-        province: '',
-        district: '',
-        // Optional fields
-        chipNumber: '',
-        description: '',
-        share: 0,
-        brand: ''
-    })
-    const [error, setError] = useState('')
-    const [selectedImage, setSelectedImage] = useState<File | null>(null)
-    const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
+    const [formData, setFormData] = useState<HorseFormData>({
+        name: "",
+        chipId: "",
+        description: "",
+        number: "",
+        origin: "",
+        percentage: "",
+        ancestry: "",
+        brand: "",
+        age: "",
+        gender: "Морь", // Default value
+        status: "Амьд", // Default value
+        province: "",
+        district: "",
+        originalOwner: "",
+        currentOwner: "",
+        acquisitionYear: "",
+        listedYear: "",
+        image: null
+    })
+
+    // Handle text input changes
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    // Handle select input changes
+    const handleSelectChange = (name: string, value: string) => {
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    // Handle image upload
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0]
-            setSelectedImage(file)
+        const file = e.target.files?.[0] || null
+
+        if (file) {
+            setFormData(prev => ({ ...prev, image: file }))
 
             // Create preview URL
             const reader = new FileReader()
-            reader.onload = (e) => {
-                if (e.target?.result) {
-                    setImagePreview(e.target.result as string)
-                }
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result as string)
             }
             reader.readAsDataURL(file)
+        } else {
+            setFormData(prev => ({ ...prev, image: null }))
+            setPreviewUrl(null)
         }
     }
 
+    // Trigger file input click
+    const handleImageClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError('')
+
+        if (!session?.user) {
+            toast.error("Та эхлээд нэвтрэх шаардлагатай")
+            return
+        }
+
+        setIsSubmitting(true)
 
         try {
-            // Create FormData to handle file upload
-            const formDataWithImage = new FormData()
+            // Create FormData for multipart/form-data submission (for image upload)
+            const submitData = new FormData()
 
-            // Add all form fields
+            // Add all text fields
             Object.entries(formData).forEach(([key, value]) => {
-                formDataWithImage.append(key, String(value))
+                if (key !== 'image' && value !== null) {
+                    submitData.append(key, value as string)
+                }
             })
 
-            // Add image if selected
-            if (selectedImage) {
-                formDataWithImage.append('image', selectedImage)
+            // Add image if exists
+            if (formData.image) {
+                submitData.append('image', formData.image)
             }
 
-            // Submit the form with image
+            // Submit to API
             const response = await fetch('/api/horses', {
                 method: 'POST',
-                body: formDataWithImage,
-                // Don't set Content-Type header when using FormData
+                body: submitData,
             })
 
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to create horse')
+                const error = await response.json()
+                throw new Error(error.message || 'Морь бүртгэхэд алдаа гарлаа')
             }
 
-            router.push('/horses')
+            const result = await response.json()
+
+            toast.success("Морь амжилттай бүртгэгдлээ")
+
+            // Redirect to the newly created horse's page
+            router.push(`/horses/${result.id}`)
             router.refresh()
+
         } catch (error) {
-            console.error('Error:', error)
-            setError(error instanceof Error ? error.message : 'An unexpected error occurred')
+            console.error('Error submitting horse:', error)
+            toast.error(error instanceof Error ? error.message : "Морь бүртгэхэд алдаа гарлаа")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
     return (
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {error}
-                </div>
-            )}
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle>Морь бүртгэх</CardTitle>
+                <CardDescription>
+                    Шинэ морины мэдээллийг бүртгэнэ үү
+                </CardDescription>
+            </CardHeader>
 
-            {/* Image upload section */}
-            <div className="mb-6">
-                <label className="block mb-2 font-medium">Морины зураг</label>
-                <div className="flex flex-col items-center">
-                    {imagePreview ? (
-                        <div className="relative w-full h-64 mb-4">
-                            <Image
-                                src={imagePreview}
-                                alt="Preview"
-                                fill
-                                className="object-contain rounded-lg"
+            <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-6">
+                    {/* Image Upload Section */}
+                    <div className="space-y-2">
+                        <Label htmlFor="image">Зураг</Label>
+                        <div
+                            onClick={handleImageClick}
+                            className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
+                            {previewUrl ? (
+                                <div className="relative w-full aspect-video">
+                                    <img
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        className="mx-auto max-h-64 rounded-md object-contain"
+                                    />
+                                    <p className="mt-2 text-sm text-gray-500">Зураг солихын тулд дарна уу</p>
+                                </div>
+                            ) : (
+                                <div className="py-8 flex flex-col items-center">
+                                    <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                                    <p className="text-sm font-medium">Зураг оруулахын тулд дарна уу</p>
+                                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP зэрэг форматууд дэмжигдэнэ</p>
+                                </div>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                id="image"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleImageChange}
                             />
                         </div>
-                    ) : (
-                        <div className="w-full h-64 bg-gray-100 flex items-center justify-center rounded-lg mb-4">
-                            <p className="text-gray-500">Зураг сонгоогүй байна</p>
+                    </div>
+
+                    {/* Basic Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Нэр</Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                required
+                            />
                         </div>
-                    )}
 
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        ref={fileInputRef}
-                        className="hidden"
-                    />
+                        <div className="space-y-2">
+                            <Label htmlFor="chipId">Чип</Label>
+                            <Input
+                                id="chipId"
+                                name="chipId"
+                                value={formData.chipId}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </div>
 
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Тайлбар</Label>
+                        <Textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleInputChange}
+                            rows={3}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="number">Дугаар</Label>
+                            <Input
+                                id="number"
+                                name="number"
+                                value={formData.number}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="origin">Нутаг</Label>
+                            <Input
+                                id="origin"
+                                name="origin"
+                                value={formData.origin}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="percentage">Хувь</Label>
+                            <Input
+                                id="percentage"
+                                name="percentage"
+                                value={formData.percentage}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="ancestry">Угшил</Label>
+                            <Input
+                                id="ancestry"
+                                name="ancestry"
+                                value={formData.ancestry}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="brand">Тамга</Label>
+                            <Input
+                                id="brand"
+                                name="brand"
+                                value={formData.brand}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Age and Gender */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="age">Нас</Label>
+                            <Select
+                                name="age"
+                                value={formData.age}
+                                onValueChange={(value: string) => handleSelectChange('age', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Насыг сонгоно уу" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 30 }, (_, i) => i + 1).map((age) => (
+                                        <SelectItem key={age} value={age.toString()}>
+                                            {age}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="gender">Хүйс</Label>
+                            <Select
+                                name="gender"
+                                value={formData.gender}
+                                onValueChange={(value: string) => handleSelectChange('gender', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Хүйсийг сонгоно уу" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Азарга">Азарга</SelectItem>
+                                    <SelectItem value="Морь">Морь</SelectItem>
+                                    <SelectItem value="Гүү">Гүү</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="space-y-2">
+                        <Label htmlFor="status">Төлөв</Label>
+                        <Select
+                            name="status"
+                            value={formData.status}
+                            onValueChange={(value: string) => handleSelectChange('status', value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Төлөвийг сонгоно уу" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Амьд">Амьд</SelectItem>
+                                <SelectItem value="Зарсан">Зарсан</SelectItem>
+                                <SelectItem value="Бэлгэлсэн">Бэлгэлсэн</SelectItem>
+                                <SelectItem value="Тогоо тосолсон">Тогоо тосолсон</SelectItem>
+                                <SelectItem value="Маханд өгсөн">Маханд өгсөн</SelectItem>
+                                <SelectItem value="Алдсан">Алдсан</SelectItem>
+                                <SelectItem value="Үхсэн">Үхсэн</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Location */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="province">Аймаг</Label>
+                            <Input
+                                id="province"
+                                name="province"
+                                value={formData.province}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="district">Сум</Label>
+                            <Input
+                                id="district"
+                                name="district"
+                                value={formData.district}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Ownership */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="originalOwner">Унаган эзэн</Label>
+                            <Input
+                                id="originalOwner"
+                                name="originalOwner"
+                                value={formData.originalOwner}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="currentOwner">Эзэн</Label>
+                            <Input
+                                id="currentOwner"
+                                name="currentOwner"
+                                value={formData.currentOwner}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Years */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="acquisitionYear">Авсан он</Label>
+                            <Input
+                                id="acquisitionYear"
+                                name="acquisitionYear"
+                                value={formData.acquisitionYear}
+                                onChange={handleInputChange}
+                                type="number"
+                                min="1900"
+                                max="2100"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="listedYear">Зарлагдсан он</Label>
+                            <Input
+                                id="listedYear"
+                                name="listedYear"
+                                value={formData.listedYear}
+                                onChange={handleInputChange}
+                                type="number"
+                                min="1900"
+                                max="2100"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+
+                <CardFooter className="flex justify-between">
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => router.back()}
                     >
-                        Зураг сонгох
+                        Буцах
                     </Button>
-                </div>
-            </div>
-
-            {/* Existing form fields */}
-            <div>
-                <label htmlFor="name" className="block mb-2 font-medium">Морины нэр</label>
-                <Input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="color" className="block mb-2 font-medium">Зүс</label>
-                <Input
-                    type="text"
-                    id="color"
-                    required
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="number" className="block mb-2 font-medium">Дугаар</label>
-                <Input
-                    type="text"
-                    id="number"
-                    required
-                    value={formData.number}
-                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="location" className="block mb-2 font-medium">Байршил</label>
-                <Input
-                    type="text"
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="ageCategory" className="block mb-2 font-medium">Насны ангилал</label>
-                <Input
-                    type="text"
-                    id="ageCategory"
-                    value={formData.ageCategory}
-                    onChange={(e) => setFormData({ ...formData, ageCategory: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="age" className="block mb-2 font-medium">Нас</label>
-                <Input
-                    type="number"
-                    id="age"
-                    min="0"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="status" className="block mb-2 font-medium">Төлөв</label>
-                <Input
-                    type="text"
-                    id="status"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="province" className="block mb-2 font-medium">Аймаг</label>
-                <Input
-                    type="text"
-                    id="province"
-                    value={formData.province}
-                    onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="district" className="block mb-2 font-medium">Сум</label>
-                <Input
-                    type="text"
-                    id="district"
-                    value={formData.district}
-                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="chipNumber" className="block mb-2 font-medium">Чипийн дугаар</label>
-                <Input
-                    type="text"
-                    id="chipNumber"
-                    value={formData.chipNumber}
-                    onChange={(e) => setFormData({ ...formData, chipNumber: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="description" className="block mb-2 font-medium">Тайлбар</label>
-                <textarea
-                    id="description"
-                    className="w-full border rounded-md p-2"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="share" className="block mb-2 font-medium">Хуваарь</label>
-                <Input
-                    type="number"
-                    id="share"
-                    value={formData.share}
-                    onChange={(e) => setFormData({ ...formData, share: parseFloat(e.target.value) })}
-                />
-            </div>
-
-            <div>
-                <label htmlFor="brand" className="block mb-2 font-medium">Брэнд</label>
-                <Input
-                    type="text"
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                />
-            </div>
-
-            <Button type="submit" className="w-full">
-                Бүртгэх
-            </Button>
-        </form>
+                    <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Бүртгэж байна...
+                            </>
+                        ) : (
+                            "Бүртгэх"
+                        )}
+                    </Button>
+                </CardFooter>
+            </form>
+        </Card>
     )
 } 

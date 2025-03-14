@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { useSession, signOut } from 'next-auth/react'
 import { Providers } from './providers'
 import { useEffect, useState } from 'react'
+import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -111,6 +112,7 @@ export default function RootLayout({
           <Header />
           <main>{children}</main>
         </Providers>
+        <Toaster position="top-right" />
       </body>
     </html>
   )
