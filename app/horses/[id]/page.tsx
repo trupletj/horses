@@ -14,7 +14,8 @@ import { ChevronLeft, Edit } from "lucide-react"
 interface HorsePageProps {
     params: {
         id: string
-    }
+    },
+    searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export async function generateMetadata({ params }: HorsePageProps): Promise<Metadata> {
