@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/card"
 import { ChevronLeft, Edit } from "lucide-react"
 
-// interface HorsePageProps {
-//     params: {
-//         id: string
-//     },
-// }
+interface HorsePageProps {
+    params: {
+        id: string
+    },
+}
 
 // async function generateMetadata({ params }: HorsePageProps): Promise<Metadata> {
 //     const horse = await db.horse.findUnique({
