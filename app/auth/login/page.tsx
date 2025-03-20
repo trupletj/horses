@@ -33,7 +33,7 @@ export default function LoginPage() {
                 throw new Error(result.error)
             }
 
-            router.push('/dashboard')
+            router.push('/horses')
         } catch (error) {
             console.error('Login error:', error)
             setError(error instanceof Error ? error.message : "Нэвтрэхэд алдаа гарлаа")
@@ -45,7 +45,7 @@ export default function LoginPage() {
     const handleGoogleSignIn = async () => {
         setIsLoading(true)
         try {
-            await signIn("google", { callbackUrl: "/dashboard" })
+            await signIn("google", { callbackUrl: "/horses" })
         } catch (error) {
             console.error("Google sign in error:", error)
         } finally {
@@ -95,7 +95,7 @@ export default function LoginPage() {
                     </Button>
                 </div>
 
-                <div className="relative mb-6">
+                {/* <div className="relative mb-6">
                     <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-gray-300" />
                     </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
                             {isLoading ? "Нэвтэрч байна..." : "Нэвтрэх"}
                         </Button>
                     </div>
-                </form>
+                </form> */}
             </CardContent>
         </Card>
     )

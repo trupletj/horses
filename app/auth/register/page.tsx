@@ -59,7 +59,7 @@ export default function RegisterPage() {
             })
 
             // Redirect to dashboard
-            router.push('/dashboard')
+            router.push('/horses')
         } catch (error) {
             console.error('Registration error:', error)
             setError(error instanceof Error ? error.message : "Бүртгэл үүсгэхэд алдаа гарлаа")
@@ -175,7 +175,7 @@ export default function RegisterPage() {
                             type="button"
                             variant="outline"
                             className="w-full flex items-center justify-center"
-                            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                            onClick={() => signIn('google', { callbackUrl: '/horses' })}
                         >
                             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                                 <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">

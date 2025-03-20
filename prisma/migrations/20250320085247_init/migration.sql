@@ -49,21 +49,27 @@ CREATE TABLE "VerificationToken" (
 CREATE TABLE "Horse" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "color" TEXT,
+    "chipId" TEXT,
+    "description" TEXT,
     "number" TEXT,
-    "location" TEXT,
-    "ageCategory" TEXT,
-    "age" INTEGER,
+    "origin" TEXT,
+    "percentage" TEXT,
+    "ancestry" TEXT,
+    "brand" TEXT,
+    "age" TEXT,
+    "gender" TEXT,
     "status" TEXT,
     "province" TEXT,
     "district" TEXT,
-    "chipNumber" TEXT,
-    "description" TEXT,
-    "share" DOUBLE PRECISION,
-    "brand" TEXT,
+    "originalOwner" TEXT,
+    "currentOwner" TEXT,
+    "acquisitionYear" TEXT,
+    "listedYear" TEXT,
     "imageUrl" TEXT,
-    "registeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "share" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "registeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT,
     "ownerId" TEXT,
 
@@ -97,6 +103,9 @@ CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token"
 -- CreateIndex
 CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
 
+-- CreateIndex
+CREATE INDEX "Horse_userId_idx" ON "Horse"("userId");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -104,7 +113,7 @@ ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Horse" ADD CONSTRAINT "Horse_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Horse" ADD CONSTRAINT "Horse_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Owner"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Horse" ADD CONSTRAINT "Horse_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Owner"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Horse" ADD CONSTRAINT "Horse_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

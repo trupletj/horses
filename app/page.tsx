@@ -26,9 +26,7 @@ export default function Home() {
             <h1 className="text-5xl font-bold mb-6 text-gray-900">
               Морины Бүртгэлийн Систем
             </h1>
-            <p className="text-xl mb-8 text-gray-600">
-              Морьдын бүртгэл, хяналт, удирдлагын систем
-            </p>
+
           </div>
 
           {/* Auth Buttons */}
@@ -38,11 +36,11 @@ export default function Home() {
                 Нэвтрэх
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            {/* <Button asChild size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
               <Link href="/auth/register">
                 Бүртгүүлэх
               </Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

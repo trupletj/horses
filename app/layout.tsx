@@ -40,7 +40,7 @@ function Header() {
         <div className="flex justify-between items-center">
           {/* Logo/Home link */}
           <Link
-            href="/dashboard"
+            href="/horses"
             className="flex items-center space-x-2"
           >
             <span className="bg-blue-600 text-white p-2 rounded-lg">
@@ -60,7 +60,7 @@ function Header() {
               <Link href="/register" className="text-gray-700 hover:text-blue-600">
                 Морь бүртгэх
               </Link>
-              <Link href="/dashboard" className="text-gray-700 hover:text-blue-600">
+              <Link href="/horses" className="text-gray-700 hover:text-blue-600">
                 Хянах самбар
               </Link>
             </div>

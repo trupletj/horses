@@ -1,40 +1,40 @@
-import { getServerSession } from "next-auth/next"
-import { redirect } from "next/navigation"
+import { getServerSession } from 'next-auth/next';
+import { redirect } from 'next/navigation';
 
 export async function getSession() {
-    return await getServerSession()
+  return await getServerSession();
 }
 
 export async function getCurrentUser() {
-    const session = await getSession()
+  const session = await getSession();
 
-    if (!session?.user?.email) {
-        return null
-    }
+  if (!session?.user?.email) {
+    return null;
+  }
 
-    return session.user
+  return session.user;
 }
 
 export async function requireAuth() {
-    const user = await getCurrentUser()
+  const user = await getCurrentUser();
 
-    if (!user) {
-        redirect("/auth/login")
-    }
+  if (!user) {
+    redirect('/auth/login');
+  }
 
-    return user
+  return user;
 }
 
 export async function requireAdmin() {
-    const user = await getCurrentUser()
+  const user = await getCurrentUser();
 
-    if (!user) {
-        redirect("/auth/login")
-    }
+  if (!user) {
+    redirect('/auth/login');
+  }
 
-    if (user.role !== "admin") {
-        redirect("/dashboard")
-    }
+  if (user.role !== 'admin') {
+    redirect('/horses');
+  }
 
-    return user
-} 
+  return user;
+}
