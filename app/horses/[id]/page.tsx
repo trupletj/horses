@@ -11,33 +11,32 @@ import {
 } from "@/components/ui/card"
 import { ChevronLeft, Edit } from "lucide-react"
 
-interface HorsePageProps {
-    params: {
-        id: string
-    },
-    searchParams?: { [key: string]: string | string[] | undefined };
-}
+// interface HorsePageProps {
+//     params: {
+//         id: string
+//     },
+// }
 
-export async function generateMetadata({ params }: HorsePageProps): Promise<Metadata> {
-    const horse = await db.horse.findUnique({
-        where: {
-            id: params.id,
-        },
-    })
+// async function generateMetadata({ params }: HorsePageProps): Promise<Metadata> {
+//     const horse = await db.horse.findUnique({
+//         where: {
+//             id: params.id,
+//         },
+//     })
 
-    if (!horse) {
-        return {
-            title: "Морь олдсонгүй",
-        }
-    }
+//     if (!horse) {
+//         return {
+//             title: "Морь олдсонгүй",
+//         }
+//     }
 
-    return {
-        title: `${horse.name} | Морины дэлгэрэнгүй`,
-        description: horse.description || `${horse.name} морины дэлгэрэнгүй мэдээлэл`,
-    }
-}
+//     return {
+//         title: `${horse.name} | Морины дэлгэрэнгүй`,
+//         description: horse.description || `${horse.name} морины дэлгэрэнгүй мэдээлэл`,
+//     }
+// }
 
-export default async function HorsePage({ params }: HorsePageProps) {
+export default async function HorsePage({ params }: any) {
     const horse = await db.horse.findUnique({
         where: {
             id: params.id,
